@@ -109,14 +109,5 @@ export function sync(directory: string, request: string): ResolveResult {
   return preferSiblingFile(oxcSync(importer, request), importer, request, {})
 }
 
-/** Default export mirroring the documented `oxc-resolver` namespace shape. */
-const resolve = { ...oxcResolver, ResolverFactory, sync } as typeof oxcResolver & {
-  ResolverFactory: typeof ResolverFactory
-  sync: typeof sync
-}
-
-// `import * as` adds ESM interop keys the upstream CJS namespace does not have.
-delete (resolve as { default?: unknown }).default
-delete (resolve as Record<string, unknown>)['module.exports']
-
-export default resolve
+/** Default export with the shimmed `sync` and `ResolverFactory` overriding upstream. */
+export default { ...oxcResolver, ResolverFactory, sync }
