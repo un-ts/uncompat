@@ -93,9 +93,7 @@ test('replaced results do not keep directory metadata', () => {
 
 test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {
   expect(canonicalizeEntry('/definitely/missing', {})).toBe('/definitely/missing')
-  expect(canonicalizeEntry('/definitely/missing', { symlinks: false })).toBe(
-    '/definitely/missing',
-  )
+  expect(canonicalizeEntry('/definitely/missing', { symlinks: false })).toBe('/definitely/missing')
   const factory = new ResolverFactory({ symlinks: false })
   expect(factory.sync(join(fixtures, 'symlink', 'link'), './index.js').path).toBe(
     join(fixtures, 'symlink', 'link', 'index.js'),
@@ -145,8 +143,8 @@ test.skipIf(process.platform === 'win32')(
   'resolveFileSync canonicalizes a symlinked importer',
   () => {
     const factory = new ResolverFactory()
-    expect(
-      factory.resolveFileSync(join(fixtures, 'symlink', 'link', 'app.js'), 'bar').path,
-    ).toBe(join(fixtures, 'symlink', 'real', 'node_modules', 'bar.js'))
+    expect(factory.resolveFileSync(join(fixtures, 'symlink', 'link', 'app.js'), 'bar').path).toBe(
+      join(fixtures, 'symlink', 'real', 'node_modules', 'bar.js'),
+    )
   },
 )

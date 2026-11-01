@@ -1,1 +1,4 @@
-{ "name": "bar", "main": "index.js" }
+{
+  "name": "bar",
+  "main": "index.js"
+}

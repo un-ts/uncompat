@@ -31,7 +31,7 @@ export class ResolverFactory {
   readonly #options: NapiResolveOptions
 
   /**
-   * @param options - upstream resolve options
+   * @param options - Upstream resolve options
    * @param inner - **internal**, used by {@link cloneWithOptions} to reuse the upstream cache and
    *   must not be passed by callers
    */
