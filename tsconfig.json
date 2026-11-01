@@ -2,6 +2,8 @@
   "extends": "./tsconfig.base",
   "compilerOptions": {
     "types": ["mdx", "node", "vite/client", "web"],
+    // Needed because `@uncompat/oxc-resolver` re-exports the ambient const enums
+    // (`EnforceExtension`, `ModuleType`) from `oxc-resolver`.
     "verbatimModuleSyntax": false
   }
 }

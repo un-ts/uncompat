@@ -5,7 +5,7 @@
  * Each shim documents the upstream change it restores.
  */
 
-import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
+import { readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
 
 /** Minimal shape of the options we need for the shims. */
@@ -54,6 +54,10 @@ export function isPackageRoot(request: string): boolean {
  * Oxc-resolver > #839 tries `node_modules/X/` before `node_modules/X.js` for a bare package name.
  * The CommonJS spec tries `LOAD_AS_FILE(DIR/X)` first, so a sibling `X.js` must win over
  * `X/index.js` — unless the package declares `exports`, which takes precedence over both.
+ *
+ * `moduleType`/`packageJsonPath` describe the discarded directory resolution, so they are cleared
+ * when the sibling file wins; computing them for the file is left to `oxc-resolver`, which this
+ * layer does not reimplement.
  */
 export function preferSiblingFile<T extends { path?: string; packageJsonPath?: string }>(
   result: T,
@@ -72,43 +76,53 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
     : ['node_modules']
   const extensions = options.fullySpecified ? [] : (options.extensions ?? DEFAULT_EXTENSIONS)
 
-  for (const moduleDirectory of collectModuleDirectories(importerDirectory, modules)) {
-    const packageDirectory = join(moduleDirectory, request)
-    if (!result.path.startsWith(packageDirectory + sep)) {
-      continue
-    }
+  let current = resolve(importerDirectory)
+  for (;;) {
+    for (const module of modules) {
+      const moduleDirectory = isAbsolute(module) ? module : join(current, module)
+      const packageDirectory = join(moduleDirectory, request)
+      if (!matchesPackage(result.path, packageDirectory)) {
+        continue
+      }
 
-    // `exports` beats `LOAD_AS_FILE`, so leave the resolved target alone.
-    if (packageDeclaresExports(packageDirectory)) {
+      // Check the sibling file first: the common case must not pay for a `package.json` read.
+      for (const extension of extensions) {
+        const candidate = packageDirectory + extension
+        if (isFile(candidate) && !packageDeclaresExports(packageDirectory)) {
+          return { ...result, path: candidate, packageJsonPath: undefined, moduleType: undefined }
+        }
+      }
+      // A bare exact file (`node_modules/X`) cannot coexist with a directory of
+      // the same name, so there is nothing else to try.
       return result
     }
 
-    for (const extension of extensions) {
-      const candidate = join(moduleDirectory, request + extension)
-      if (isFile(candidate)) {
-        return { ...result, path: candidate, packageJsonPath: undefined }
-      }
-    }
-    // A bare exact file (`node_modules/X`) cannot coexist with a directory of
-    // the same name, so there is nothing else to try.
-    return result
-  }
-
-  return result
-}
-
-function collectModuleDirectories(start: string, modules: string[]): string[] {
-  const directories: string[] = []
-  let current = resolve(start)
-  for (;;) {
-    for (const module of modules) {
-      directories.push(isAbsolute(module) ? module : join(current, module))
-    }
     const parent = dirname(current)
     if (parent === current) {
-      return directories
+      return result
     }
     current = parent
+  }
+}
+
+/**
+ * Whether the resolved path belongs to `packageDirectory`.
+ *
+ * The package directory can itself be a symlink (`pnpm`, `npm link`), in which case upstream
+ * returns the real path. Only pay for `realpathSync` when the lexical comparison fails.
+ */
+function matchesPackage(resolvedPath: string, packageDirectory: string): boolean {
+  if (resolvedPath.startsWith(packageDirectory + sep)) {
+    return true
+  }
+  try {
+    const realPackageDirectory = realpathSync(packageDirectory)
+    return (
+      realPackageDirectory !== packageDirectory &&
+      resolvedPath.startsWith(realPackageDirectory + sep)
+    )
+  } catch {
+    return false
   }
 }
 
@@ -121,7 +135,8 @@ function packageDeclaresExports(packageDirectory: string): boolean {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
       exports?: unknown
     }
-    return packageJson.exports !== undefined
+    // `"exports": null` is not a condition map; Node falls back to file/directory lookup.
+    return packageJson.exports !== undefined && packageJson.exports !== null
   } catch {
     return false
   }
@@ -134,5 +149,3 @@ function isFile(path: string): boolean {
     return false
   }
 }
-
-export { existsSync }

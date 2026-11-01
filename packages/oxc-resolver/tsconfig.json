@@ -1,7 +1,4 @@
 {
   "extends": "../../tsconfig.base",
-  "include": ["src"],
-  "compilerOptions": {
-    "verbatimModuleSyntax": false
-  }
+  "include": ["src"]
 }

@@ -22,8 +22,6 @@ import { canonicalizeEntry, preferSiblingFile } from './shims.js'
 export type * from 'oxc-resolver'
 export { EnforceExtension, ModuleType } from 'oxc-resolver'
 
-const DEFAULT_OPTIONS: NapiResolveOptions = {}
-
 /**
  * Drop-in replacement for `oxc-resolver`'s `ResolverFactory`, with the compatibility shims applied
  * to every resolve call.
@@ -32,8 +30,13 @@ export class ResolverFactory {
   readonly #inner: OxcResolverFactory
   readonly #options: NapiResolveOptions
 
+  /**
+   * @param options - upstream resolve options
+   * @param inner - **internal**, used by {@link cloneWithOptions} to reuse the upstream cache and
+   *   must not be passed by callers
+   */
   constructor(options?: NapiResolveOptions | null, inner?: OxcResolverFactory) {
-    this.#options = options ?? DEFAULT_OPTIONS
+    this.#options = options ?? {}
     this.#inner = inner ?? new OxcResolverFactory(this.#options)
   }
 
@@ -69,7 +72,7 @@ export class ResolverFactory {
   }
 
   resolveFileSync(file: string, request: string): ResolveResult {
-    const importer = dirname(file)
+    const importer = canonicalizeEntry(dirname(file), this.#options)
     return preferSiblingFile(
       this.#inner.resolveFileSync(file, request),
       importer,
@@ -79,7 +82,7 @@ export class ResolverFactory {
   }
 
   async resolveFileAsync(file: string, request: string): Promise<ResolveResult> {
-    const importer = dirname(file)
+    const importer = canonicalizeEntry(dirname(file), this.#options)
     return preferSiblingFile(
       await this.#inner.resolveFileAsync(file, request),
       importer,
@@ -99,10 +102,6 @@ export class ResolverFactory {
 
 /** Resolve `request` from `directory`, with the compatibility shims applied. */
 export function sync(directory: string, request: string): ResolveResult {
-  const importer = canonicalizeEntry(directory, DEFAULT_OPTIONS)
-  return preferSiblingFile(oxcSync(importer, request), importer, request, DEFAULT_OPTIONS)
+  const importer = canonicalizeEntry(directory, {})
+  return preferSiblingFile(oxcSync(importer, request), importer, request, {})
 }
-
-const resolve = { sync }
-
-export default resolve

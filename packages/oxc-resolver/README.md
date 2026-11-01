@@ -20,6 +20,7 @@ Everything else — including upstream bug fixes — comes from `oxc-resolver`.
 - [Usage](#usage)
   - [Install](#install)
   - [API](#api)
+- [Limitations](#limitations)
 - [Sponsors and Backers](#sponsors-and-backers)
   - [Sponsors](#sponsors)
   - [Backers](#backers)
@@ -52,6 +53,15 @@ import { ResolverFactory } from '@uncompat/oxc-resolver'
 const resolver = new ResolverFactory({ extensions: ['.js', '.ts'] })
 resolver.sync(process.cwd(), 'some-package')
 ```
+
+## Limitations
+
+- The sibling-file ordering only applies to the legacy `node_modules/X.js` layout; packages
+  reached through `NODE_PATH` are not shimmed.
+- When the sibling file wins, `moduleType` and `packageJsonPath` describe the discarded
+  directory resolution, so they are cleared instead of recomputed for the file.
+- `"exports": null` is treated as absent, but `oxc-resolver` itself currently fails to resolve
+  such a package, so the shim cannot recover that case.
 
 ## Sponsors and Backers
 
