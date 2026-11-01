@@ -34,5 +34,8 @@
         "default": "./lib/index.cjs"
       }
     }
+  },
+  "engines": {
+    "node": ">= 14"
   }
 }
