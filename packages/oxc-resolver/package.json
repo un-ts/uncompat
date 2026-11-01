@@ -8,9 +8,6 @@
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "funding": "https://opencollective.com/unts",
   "license": "MIT",
-  "engines": {
-    "node": ">=18.18.0"
-  },
   "exports": "./src/index.ts",
   "files": [
     "lib"
