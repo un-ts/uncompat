@@ -17,7 +17,7 @@ import { dirname } from 'node:path'
 import oxcResolver, { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-resolver'
 import type { NapiResolveOptions, ResolveResult } from 'oxc-resolver'
 
-import { canonicalizeEntry, canonicalizeFile, preferSiblingFile } from './shims.ts'
+import { canonicalizePath, preferSiblingFile } from './shims.ts'
 
 export type * from 'oxc-resolver'
 export { EnforceExtension, ModuleType } from 'oxc-resolver'
@@ -57,12 +57,12 @@ export class ResolverFactory {
   }
 
   sync(directory: string, request: string): ResolveResult {
-    const importer = canonicalizeEntry(directory, this.#options)
+    const importer = canonicalizePath(directory, this.#options)
     return preferSiblingFile(this.#inner.sync(importer, request), importer, request, this.#options)
   }
 
   async async(directory: string, request: string): Promise<ResolveResult> {
-    const importer = canonicalizeEntry(directory, this.#options)
+    const importer = canonicalizePath(directory, this.#options)
     return preferSiblingFile(
       await this.#inner.async(importer, request),
       importer,
@@ -72,7 +72,7 @@ export class ResolverFactory {
   }
 
   resolveFileSync(file: string, request: string): ResolveResult {
-    const canonicalFile = canonicalizeFile(file, this.#options)
+    const canonicalFile = canonicalizePath(file, this.#options)
     const importer = dirname(canonicalFile)
     return preferSiblingFile(
       this.#inner.resolveFileSync(canonicalFile, request),
@@ -83,7 +83,7 @@ export class ResolverFactory {
   }
 
   async resolveFileAsync(file: string, request: string): Promise<ResolveResult> {
-    const canonicalFile = canonicalizeFile(file, this.#options)
+    const canonicalFile = canonicalizePath(file, this.#options)
     const importer = dirname(canonicalFile)
     return preferSiblingFile(
       await this.#inner.resolveFileAsync(canonicalFile, request),
@@ -104,7 +104,7 @@ export class ResolverFactory {
 
 /** Resolve `request` from `directory`, with the compatibility shims applied. */
 export function sync(directory: string, request: string): ResolveResult {
-  const importer = canonicalizeEntry(directory, {})
+  const importer = canonicalizePath(directory, {})
   return preferSiblingFile(oxcSync(importer, request), importer, request, {})
 }
 

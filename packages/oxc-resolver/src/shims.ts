@@ -20,29 +20,17 @@ const DEFAULT_EXTENSIONS = ['.js', '.json', '.node']
 
 /**
  * Oxc-resolver > #848 stopped canonicalizing the entry path for speed; Node (and this compatibility
- * layer) resolves the real path of the directory the request starts from when symlinks are
+ * layer) resolves the real path of the entry (directory or importer file) when symlinks are
  * enabled.
  */
-export function canonicalizeEntry(directory: string, options: ShimOptions): string {
+export function canonicalizePath(path: string, options: ShimOptions): string {
   if (options.symlinks === false) {
-    return directory
+    return path
   }
   try {
-    return realpathSync(directory)
+    return realpathSync(path)
   } catch {
-    return directory
-  }
-}
-
-/** Like {@link canonicalizeEntry}, but for a file importer. */
-export function canonicalizeFile(file: string, options: ShimOptions): string {
-  if (options.symlinks === false) {
-    return file
-  }
-  try {
-    return realpathSync(file)
-  } catch {
-    return file
+    return path
   }
 }
 

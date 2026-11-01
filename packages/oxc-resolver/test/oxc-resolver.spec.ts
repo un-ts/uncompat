@@ -5,8 +5,7 @@ import resolve, { ResolverFactory, sync } from '@uncompat/oxc-resolver'
 import { expect, test } from 'vitest'
 
 import {
-  canonicalizeEntry,
-  canonicalizeFile,
+  canonicalizePath,
   isPackageRoot,
   preferSiblingFile,
 } from '../src/shims.ts'
@@ -122,11 +121,11 @@ test('default export exposes the shimmed sync and ResolverFactory', () => {
   expect(resolve).not.toHaveProperty('default')
 })
 
-test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {
-  expect(canonicalizeEntry('/definitely/missing', {})).toBe('/definitely/missing')
-  expect(canonicalizeEntry('/definitely/missing', { symlinks: false })).toBe('/definitely/missing')
-  expect(canonicalizeFile('/definitely/missing.js', {})).toBe('/definitely/missing.js')
-  expect(canonicalizeFile('/definitely/missing.js', { symlinks: false })).toBe(
+test('canonicalizePath respects symlinks: false and survives missing paths', () => {
+  expect(canonicalizePath('/definitely/missing', {})).toBe('/definitely/missing')
+  expect(canonicalizePath('/definitely/missing', { symlinks: false })).toBe('/definitely/missing')
+  expect(canonicalizePath('/definitely/missing.js', {})).toBe('/definitely/missing.js')
+  expect(canonicalizePath('/definitely/missing.js', { symlinks: false })).toBe(
     '/definitely/missing.js',
   )
   const factory = new ResolverFactory({ symlinks: false })
