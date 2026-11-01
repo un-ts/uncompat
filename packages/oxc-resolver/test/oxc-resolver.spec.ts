@@ -76,14 +76,23 @@ test('factory helpers keep working', () => {
 
 test.skipIf(process.platform === 'win32')(
   'cloneWithOptions applies the new options to the shims',
-  () => {
-    const factory = new ResolverFactory()
-    const clone = factory.cloneWithOptions({ symlinks: false })
-    const link = join(fixtures, 'symlink', 'link')
-    expect(factory.sync(link, './index.js').path).toBe(
-      join(fixtures, 'symlink', 'real', 'index.js'),
+  async () => {
+    const file = join(fixtures, 'symlink-file', 'project', 'app.js')
+    const factory = new ResolverFactory({ symlinks: false })
+    // Upstream replaces the options, so `symlinks` falls back to `true` on the clone.
+    const clone = factory.cloneWithOptions({ extensions: ['.js'] })
+    expect(factory.resolveFileSync(file, 'bar').path).toBe(
+      join(fixtures, 'symlink-file', 'project', 'node_modules', 'bar.js'),
     )
-    expect(clone.sync(link, './index.js').path).toBe(join(fixtures, 'symlink', 'link', 'index.js'))
+    expect((await factory.resolveFileAsync(file, 'bar')).path).toBe(
+      join(fixtures, 'symlink-file', 'project', 'node_modules', 'bar.js'),
+    )
+    expect(clone.resolveFileSync(file, 'bar').path).toBe(
+      join(fixtures, 'symlink-file', 'store', 'node_modules', 'bar', 'index.js'),
+    )
+    expect((await clone.resolveFileAsync(file, 'bar')).path).toBe(
+      join(fixtures, 'symlink-file', 'store', 'node_modules', 'bar', 'index.js'),
+    )
   },
 )
 
