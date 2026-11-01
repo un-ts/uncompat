@@ -160,6 +160,15 @@ test('preferSiblingFile tolerates an unreadable package.json and absolute module
 })
 
 test.skipIf(process.platform === 'win32')(
+  'canonicalizePath falls back to the real parent for a missing file',
+  () => {
+    expect(canonicalizePath(join(fixtures, 'symlink', 'link', 'missing.js'), {})).toBe(
+      join(fixtures, 'symlink', 'real', 'missing.js'),
+    )
+  },
+)
+
+test.skipIf(process.platform === 'win32')(
   'resolveFile* uses the canonical importer tree',
   async () => {
     const root = join(fixtures, 'symlink-file-pkg')

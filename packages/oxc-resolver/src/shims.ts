@@ -6,7 +6,7 @@
  */
 
 import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 
 /** Minimal shape of the options we need for the shims. */
 export interface ShimOptions {
@@ -30,7 +30,13 @@ export function canonicalizePath(path: string, options: ShimOptions): string {
   try {
     return realpathSync(path)
   } catch {
-    return path
+    // The file may not exist yet (or be a broken link); resolve its parent so a symlinked
+    // importer directory still maps to the real tree.
+    try {
+      return join(realpathSync(dirname(path)), basename(path))
+    } catch {
+      return path
+    }
   }
 }
 
