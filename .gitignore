@@ -9,3 +9,5 @@ coverage
 dist
 lib
 node_modules
+
+@eaDir
