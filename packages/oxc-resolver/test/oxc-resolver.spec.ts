@@ -114,6 +114,7 @@ test.skipIf(process.platform === 'win32')(
 test('default export exposes the shimmed sync and ResolverFactory', () => {
   expect(resolve.sync(fileOverDir, 'bar').path).toBe(inFileOverDir('node_modules', 'bar.js'))
   expect(resolve.ResolverFactory).toBe(ResolverFactory)
+  expect(resolve).not.toHaveProperty('default')
 })
 
 test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {

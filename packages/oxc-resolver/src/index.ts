@@ -14,8 +14,7 @@
 
 import { basename, dirname, join } from 'node:path'
 
-import { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-resolver'
-import * as oxcResolver from 'oxc-resolver'
+import oxcResolver, { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-resolver'
 import type { NapiResolveOptions, ResolveResult } from 'oxc-resolver'
 
 import { canonicalizeEntry, preferSiblingFile } from './shims.ts'
