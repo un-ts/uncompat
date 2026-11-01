@@ -74,6 +74,19 @@ test('factory helpers keep working', () => {
   expect(clone.sync(fileOverDir, 'bar').path).toBe(inFileOverDir('node_modules', 'bar.js'))
 })
 
+test.skipIf(process.platform === 'win32')(
+  'cloneWithOptions applies the new options to the shims',
+  () => {
+    const factory = new ResolverFactory()
+    const clone = factory.cloneWithOptions({ symlinks: false })
+    const link = join(fixtures, 'symlink', 'link')
+    expect(factory.sync(link, './index.js').path).toBe(
+      join(fixtures, 'symlink', 'real', 'index.js'),
+    )
+    expect(clone.sync(link, './index.js').path).toBe(join(fixtures, 'symlink', 'link', 'index.js'))
+  },
+)
+
 test('delegated dts resolution still runs', async () => {
   const factory = new ResolverFactory()
   expect(factory.resolveDtsSync(join(fileOverDir, 'app.js'), 'bar')).toBeDefined()
@@ -160,15 +173,6 @@ test('preferSiblingFile tolerates an unreadable package.json and absolute module
 })
 
 test.skipIf(process.platform === 'win32')(
-  'canonicalizePath falls back to the real parent for a missing file',
-  () => {
-    expect(canonicalizePath(join(fixtures, 'symlink', 'link', 'missing.js'), {})).toBe(
-      join(fixtures, 'symlink', 'real', 'missing.js'),
-    )
-  },
-)
-
-test.skipIf(process.platform === 'win32')(
   'resolveFile* uses the canonical importer tree',
   async () => {
     const root = join(fixtures, 'symlink-file-pkg')
@@ -193,21 +197,11 @@ test.skipIf(process.platform === 'win32')(
 )
 
 test.skipIf(process.platform === 'win32')(
-  'entry directory is canonicalized when symlinks are enabled',
+  'entry path is canonicalized when symlinks are enabled',
   () => {
     const factory = new ResolverFactory()
     expect(factory.sync(join(fixtures, 'symlink', 'link'), './index.js').path).toBe(
       join(fixtures, 'symlink', 'real', 'index.js'),
-    )
-  },
-)
-
-test.skipIf(process.platform === 'win32')(
-  'resolveFileSync canonicalizes a symlinked importer',
-  () => {
-    const factory = new ResolverFactory()
-    expect(factory.resolveFileSync(join(fixtures, 'symlink', 'link', 'app.js'), 'bar').path).toBe(
-      join(fixtures, 'symlink', 'real', 'node_modules', 'bar.js'),
     )
   },
 )

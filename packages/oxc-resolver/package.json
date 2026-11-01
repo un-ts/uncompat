@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Node-compatible module resolution on top of oxc-resolver",
-  "repository": "git+https://github.com/un-ts/uncompat.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/un-ts/uncompat.git",
+    "directory": "packages/oxc-resolver"
+  },
   "homepage": "https://github.com/un-ts/uncompat/blob/main/packages/oxc-resolver",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "funding": "https://opencollective.com/unts",

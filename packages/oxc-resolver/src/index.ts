@@ -6,8 +6,8 @@
  *
  * - `LOAD_AS_FILE(DIR/X)` before `LOAD_AS_DIRECTORY(DIR/X)` for a bare package name (oxc-resolver >
  *   #839), so a sibling `node_modules/X.js` wins over `node_modules/X/`.
- * - The entry directory is canonicalized before resolution, like Node does when symlinks are enabled
- *   (oxc-resolver > #848).
+ * - The entry path (directory or importer file) is canonicalized before resolution, like Node does
+ *   when symlinks are enabled (oxc-resolver > #848).
  *
  * Anything else — including upstream bug fixes — is delegated to `oxc-resolver`.
  */
@@ -45,11 +45,9 @@ export class ResolverFactory {
   }
 
   cloneWithOptions(options: NapiResolveOptions): ResolverFactory {
-    // Reuse the inner factory (and its cache) like the original API does.
-    return new ResolverFactory(
-      { ...this.#options, ...options },
-      this.#inner.cloneWithOptions(options),
-    )
+    // `oxc-resolver` replaces the options (only the cache is shared), so the shims must see the
+    // same options object the cloned inner resolver uses.
+    return new ResolverFactory(options, this.#inner.cloneWithOptions(options))
   }
 
   clearCache(): void {

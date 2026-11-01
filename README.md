@@ -25,7 +25,7 @@
 
 ## Packages
 
-This repository is a monorepo managed by \[changesets]\[] what means we actually publish several packages to npm from same codebase, including:
+This repository is a monorepo managed by [changesets](https://github.com/changesets/changesets), which means we publish several packages to npm from the same codebase:
 
 | Package                                            | Description                                              | Version                                                                                                                                                                                                                                                |
 | -------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
