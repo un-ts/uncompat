@@ -4,7 +4,12 @@ import { fileURLToPath } from 'node:url'
 import resolve, { ResolverFactory, sync } from '@uncompat/oxc-resolver'
 import { expect, test } from 'vitest'
 
-import { canonicalizeEntry, canonicalizeFile, isPackageRoot, preferSiblingFile } from '../src/shims.ts'
+import {
+  canonicalizeEntry,
+  canonicalizeFile,
+  isPackageRoot,
+  preferSiblingFile,
+} from '../src/shims.ts'
 
 const fixtures = fileURLToPath(new URL('./fixtures', import.meta.url))
 const fileOverDir = join(fixtures, 'file-over-dir')
