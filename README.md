@@ -27,8 +27,8 @@
 
 This repository is a monorepo managed by \[changesets]\[] what means we actually publish several packages to npm from same codebase, including:
 
-| Package                                        | Description                  | Version                                                                                                                                                                                                                           |
-| ---------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package                                            | Description                                              | Version                                                                                                                                                                                                                                                |
+| -------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`@uncompat/oxc-resolver`](/packages/oxc-resolver) | Node-compatible module resolution on top of oxc-resolver | [![npm](https://img.shields.io/npm/v/@uncompat/oxc-resolver.svg)](https://www.npmjs.com/package/@uncompat/oxc-resolver) [![View changelog](https://img.shields.io/badge/changelog-explore-brightgreen)](https://changelogs.xyz/@uncompat/oxc-resolver) |
 
 ## Sponsors and Backers

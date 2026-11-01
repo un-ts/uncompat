@@ -1,5 +1,5 @@
 ---
-'@uncompat/oxc-resolver': minor
+"@uncompat/oxc-resolver": minor
 ---
 
 Initial release: Node-compatible resolution shims over `oxc-resolver`.

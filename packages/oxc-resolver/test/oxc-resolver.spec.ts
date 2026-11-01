@@ -1,6 +1,5 @@
-import { expect, test } from 'vitest'
-
 import resolve, { ResolverFactory, sync } from '@uncompat/oxc-resolver'
+import { expect, test } from 'vitest'
 
 const fixtures = new URL('./fixtures', import.meta.url).pathname
 const fileOverDir = `${fixtures}/file-over-dir`

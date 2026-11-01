@@ -1,1 +1,1 @@
-module.exports = 'real/index.js';
+module.exports = 'real/index.js'
