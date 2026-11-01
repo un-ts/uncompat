@@ -14,6 +14,7 @@ export interface ShimOptions {
   modules?: string | string[]
   symlinks?: boolean
   fullySpecified?: boolean
+  exportsFields?: (string | string[])[]
 }
 
 const DEFAULT_EXTENSIONS = ['.js', '.json', '.node']
@@ -75,6 +76,9 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
       : [options.modules]
     : ['node_modules']
   const extensions = options.fullySpecified ? [] : (options.extensions ?? DEFAULT_EXTENSIONS)
+  const exportsFields = (options.exportsFields ?? ['exports']).map(field =>
+    Array.isArray(field) ? field : [field],
+  )
 
   let current = resolve(importerDirectory)
   for (;;) {
@@ -92,7 +96,7 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
           continue
         }
         // `exports` beats `LOAD_AS_FILE`; read it once, after a candidate actually exists.
-        if (packageDeclaresExports(packageDirectory)) {
+        if (packageDeclaresExports(packageDirectory, exportsFields)) {
           return result
         }
         return { ...result, path: candidate, packageJsonPath: undefined, moduleType: undefined }
@@ -136,17 +140,24 @@ function matchesPackage(resolvedPath: string, packageDirectory: string): boolean
   }
 }
 
-function packageDeclaresExports(packageDirectory: string): boolean {
+function packageDeclaresExports(packageDirectory: string, exportsFields: string[][]): boolean {
   const packageJsonPath = join(packageDirectory, 'package.json')
   if (!isFile(packageJsonPath)) {
     return false
   }
   try {
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
-      exports?: unknown
-    }
-    // `"exports": null` is not a condition map; Node falls back to file/directory lookup.
-    return packageJson.exports !== undefined && packageJson.exports !== null
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as Record<string, unknown>
+    return exportsFields.some(fieldPath => {
+      let value: unknown = packageJson
+      for (const key of fieldPath) {
+        if (typeof value !== 'object' || value === null) {
+          return false
+        }
+        value = (value as Record<string, unknown>)[key]
+      }
+      // `null` is not a condition map; Node falls back to file/directory lookup.
+      return value !== undefined && value !== null
+    })
   } catch {
     return false
   }

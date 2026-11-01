@@ -29,6 +29,22 @@ test('exports takes precedence over a sibling file', () => {
   )
 })
 
+test('exportsFields is honored before the sibling file', () => {
+  const request = 'with-custom-exports'
+  const sibling = inFileOverDir('node_modules', 'with-custom-exports.js')
+  const index = inFileOverDir('node_modules', 'with-custom-exports', 'index.js')
+  expect(new ResolverFactory().sync(fileOverDir, request).path).toBe(sibling)
+  expect(new ResolverFactory({ exportsFields: [['custom']] }).sync(fileOverDir, request).path).toBe(
+    index,
+  )
+  expect(new ResolverFactory({ exportsFields: ['custom'] }).sync(fileOverDir, request).path).toBe(
+    index,
+  )
+  expect(
+    new ResolverFactory({ exportsFields: [['name', 'nested']] }).sync(fileOverDir, request).path,
+  ).toBe(sibling)
+})
+
 test('directory without a sibling file still resolves as a directory', () => {
   const factory = new ResolverFactory()
   expect(factory.sync(fileOverDir, 'dir-only').path).toBe(
