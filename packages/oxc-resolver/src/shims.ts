@@ -34,6 +34,18 @@ export function canonicalizeEntry(directory: string, options: ShimOptions): stri
   }
 }
 
+/** Like {@link canonicalizeEntry}, but for a file importer. */
+export function canonicalizeFile(file: string, options: ShimOptions): string {
+  if (options.symlinks === false) {
+    return file
+  }
+  try {
+    return realpathSync(file)
+  } catch {
+    return file
+  }
+}
+
 /** Whether `request` names a package root (`pkg` or `@scope/pkg`). */
 export function isPackageRoot(request: string): boolean {
   if (!request || request.startsWith('.') || request.startsWith('/') || request.startsWith('#')) {

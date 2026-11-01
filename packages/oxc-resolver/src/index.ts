@@ -12,12 +12,12 @@
  * Anything else — including upstream bug fixes — is delegated to `oxc-resolver`.
  */
 
-import { basename, dirname, join } from 'node:path'
+import { dirname } from 'node:path'
 
 import oxcResolver, { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-resolver'
 import type { NapiResolveOptions, ResolveResult } from 'oxc-resolver'
 
-import { canonicalizeEntry, preferSiblingFile } from './shims.ts'
+import { canonicalizeEntry, canonicalizeFile, preferSiblingFile } from './shims.ts'
 
 export type * from 'oxc-resolver'
 export { EnforceExtension, ModuleType } from 'oxc-resolver'
@@ -72,8 +72,8 @@ export class ResolverFactory {
   }
 
   resolveFileSync(file: string, request: string): ResolveResult {
-    const importer = canonicalizeEntry(dirname(file), this.#options)
-    const canonicalFile = join(importer, basename(file))
+    const canonicalFile = canonicalizeFile(file, this.#options)
+    const importer = dirname(canonicalFile)
     return preferSiblingFile(
       this.#inner.resolveFileSync(canonicalFile, request),
       importer,
@@ -83,8 +83,8 @@ export class ResolverFactory {
   }
 
   async resolveFileAsync(file: string, request: string): Promise<ResolveResult> {
-    const importer = canonicalizeEntry(dirname(file), this.#options)
-    const canonicalFile = join(importer, basename(file))
+    const canonicalFile = canonicalizeFile(file, this.#options)
+    const importer = dirname(canonicalFile)
     return preferSiblingFile(
       await this.#inner.resolveFileAsync(canonicalFile, request),
       importer,

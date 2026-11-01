@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import resolve, { ResolverFactory, sync } from '@uncompat/oxc-resolver'
 import { expect, test } from 'vitest'
 
-import { canonicalizeEntry, isPackageRoot, preferSiblingFile } from '../src/shims.ts'
+import { canonicalizeEntry, canonicalizeFile, isPackageRoot, preferSiblingFile } from '../src/shims.ts'
 
 const fixtures = fileURLToPath(new URL('./fixtures', import.meta.url))
 const fileOverDir = join(fixtures, 'file-over-dir')
@@ -120,6 +120,10 @@ test('default export exposes the shimmed sync and ResolverFactory', () => {
 test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {
   expect(canonicalizeEntry('/definitely/missing', {})).toBe('/definitely/missing')
   expect(canonicalizeEntry('/definitely/missing', { symlinks: false })).toBe('/definitely/missing')
+  expect(canonicalizeFile('/definitely/missing.js', {})).toBe('/definitely/missing.js')
+  expect(canonicalizeFile('/definitely/missing.js', { symlinks: false })).toBe(
+    '/definitely/missing.js',
+  )
   const factory = new ResolverFactory({ symlinks: false })
   expect(factory.sync(join(fixtures, 'symlink', 'link'), './index.js').path).toBe(
     join(fixtures, 'symlink', 'link', 'index.js'),
@@ -160,6 +164,18 @@ test.skipIf(process.platform === 'win32')(
   async () => {
     const root = join(fixtures, 'symlink-file-pkg')
     const file = join(root, 'project', 'node_modules', 'pkg', 'app.js')
+    const expected = join(root, 'store', 'node_modules', 'bar', 'index.js')
+    const factory = new ResolverFactory()
+    expect(factory.resolveFileSync(file, 'bar').path).toBe(expected)
+    expect((await factory.resolveFileAsync(file, 'bar')).path).toBe(expected)
+  },
+)
+
+test.skipIf(process.platform === 'win32')(
+  'resolveFile* canonicalizes a symlinked file importer',
+  async () => {
+    const root = join(fixtures, 'symlink-file')
+    const file = join(root, 'project', 'app.js')
     const expected = join(root, 'store', 'node_modules', 'bar', 'index.js')
     const factory = new ResolverFactory()
     expect(factory.resolveFileSync(file, 'bar').path).toBe(expected)
