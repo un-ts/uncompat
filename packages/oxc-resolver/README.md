@@ -15,7 +15,7 @@ resolution details that upstream trades for speed:
 
 Everything else — including upstream bug fixes — comes from `oxc-resolver`.
 
-Requires Node.js 14 or later (the effective floor of `oxc-resolver`'s loader).
+Requires Node.js 14.18 or later (the effective floor of `oxc-resolver`'s loader plus `node:`-prefixed `require`).
 
 ## TOC <!-- omit in toc -->
 

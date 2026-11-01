@@ -122,7 +122,7 @@ function matchesPackage(resolvedPath: string, packageDirectory: string): boolean
   }
   // Avoid a thrown ENOENT for every ancestor without such a package; only an existing
   // (possibly symlinked) package directory is worth canonicalizing.
-  if (!pathExists(packageDirectory)) {
+  if (!lstatSync(packageDirectory, { throwIfNoEntry: false })) {
     return false
   }
   try {
@@ -147,16 +147,6 @@ function packageDeclaresExports(packageDirectory: string): boolean {
     }
     // `"exports": null` is not a condition map; Node falls back to file/directory lookup.
     return packageJson.exports !== undefined && packageJson.exports !== null
-  } catch {
-    return false
-  }
-}
-
-function pathExists(path: string): boolean {
-  // `lstatSync({ throwIfNoEntry: false })` is Node.js 14.17+, keep the wrapper Node.js 14.0-compatible.
-  try {
-    lstatSync(path)
-    return true
   } catch {
     return false
   }
