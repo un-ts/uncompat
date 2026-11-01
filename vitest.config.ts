@@ -5,7 +5,6 @@ export default defineConfig({
     globals: true,
     coverage: {
       enabled: true,
-      exclude: ['**/@eaDir/**'],
       include: ['packages/*/src/**'],
       provider: 'v8',
       reporter: ['lcov', 'json', 'text'],
