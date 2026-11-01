@@ -5,7 +5,7 @@
  * Each shim documents the upstream change it restores.
  */
 
-import { readFileSync, realpathSync, statSync } from 'node:fs'
+import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
 
 /** Minimal shape of the options we need for the shims. */
@@ -88,9 +88,14 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
       // Check the sibling file first: the common case must not pay for a `package.json` read.
       for (const extension of extensions) {
         const candidate = packageDirectory + extension
-        if (isFile(candidate) && !packageDeclaresExports(packageDirectory)) {
-          return { ...result, path: candidate, packageJsonPath: undefined, moduleType: undefined }
+        if (!isFile(candidate)) {
+          continue
         }
+        // `exports` beats `LOAD_AS_FILE`; read it once, after a candidate actually exists.
+        if (packageDeclaresExports(packageDirectory)) {
+          return result
+        }
+        return { ...result, path: candidate, packageJsonPath: undefined, moduleType: undefined }
       }
       // A bare exact file (`node_modules/X`) cannot coexist with a directory of
       // the same name, so there is nothing else to try.
@@ -114,6 +119,11 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
 function matchesPackage(resolvedPath: string, packageDirectory: string): boolean {
   if (resolvedPath.startsWith(packageDirectory + sep)) {
     return true
+  }
+  // Avoid a thrown ENOENT for every ancestor without such a package; only an existing
+  // (possibly symlinked) package directory is worth canonicalizing.
+  if (!lstatSync(packageDirectory, { throwIfNoEntry: false })) {
+    return false
   }
   try {
     const realPackageDirectory = realpathSync(packageDirectory)

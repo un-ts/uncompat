@@ -91,6 +91,26 @@ test('replaced results do not keep directory metadata', () => {
   expect(result.packageJsonPath).toBeUndefined()
 })
 
+test('modules as a single directory name', () => {
+  expect(new ResolverFactory({ modules: 'node_modules' }).sync(fileOverDir, 'bar').path).toBe(
+    inFileOverDir('node_modules', 'bar.js'),
+  )
+})
+
+test('fullySpecified disables the sibling-file scan', () => {
+  expect(new ResolverFactory({ fullySpecified: true }).sync(fileOverDir, 'bar').path).toBe(
+    inFileOverDir('node_modules', 'bar', 'index.js'),
+  )
+})
+
+test.skipIf(process.platform === 'win32')(
+  'preferSiblingFile survives a looping symlink package directory',
+  () => {
+    const result = { path: '/definitely/not/here/x.js' }
+    expect(preferSiblingFile(result, join(fixtures, 'loop'), 'link', {})).toBe(result)
+  },
+)
+
 test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {
   expect(canonicalizeEntry('/definitely/missing', {})).toBe('/definitely/missing')
   expect(canonicalizeEntry('/definitely/missing', { symlinks: false })).toBe('/definitely/missing')
