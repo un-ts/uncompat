@@ -18,7 +18,7 @@ import { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-reso
 import * as oxcResolver from 'oxc-resolver'
 import type { NapiResolveOptions, ResolveResult } from 'oxc-resolver'
 
-import { canonicalizeEntry, preferSiblingFile } from './shims.js'
+import { canonicalizeEntry, preferSiblingFile } from './shims.ts'
 
 export type * from 'oxc-resolver'
 export { EnforceExtension, ModuleType } from 'oxc-resolver'

@@ -4,6 +4,8 @@
     "types": ["mdx", "node", "vite/client", "web"],
     // Needed because `@uncompat/oxc-resolver` re-exports the ambient const enums
     // (`EnforceExtension`, `ModuleType`) from `oxc-resolver`.
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    // The source uses `.ts` specifiers so Node.js can run it with type stripping.
+    "allowImportingTsExtensions": true
   }
 }
