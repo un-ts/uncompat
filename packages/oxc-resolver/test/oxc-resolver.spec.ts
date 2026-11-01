@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { ResolverFactory, sync } from '@uncompat/oxc-resolver'
+import resolve, { ResolverFactory, sync } from '@uncompat/oxc-resolver'
 import { expect, test } from 'vitest'
 
 import { canonicalizeEntry, isPackageRoot, preferSiblingFile } from '../src/shims.js'
@@ -110,6 +110,10 @@ test.skipIf(process.platform === 'win32')(
     expect(preferSiblingFile(result, join(fixtures, 'loop'), 'link', {})).toBe(result)
   },
 )
+
+test('default export keeps the resolve.sync shape', () => {
+  expect(resolve.sync(fileOverDir, 'bar').path).toBe(inFileOverDir('node_modules', 'bar.js'))
+})
 
 test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {
   expect(canonicalizeEntry('/definitely/missing', {})).toBe('/definitely/missing')

@@ -4,8 +4,7 @@ A thin compatibility layer over [`oxc-resolver`](https://www.npmjs.com/package/o
 
 > Unofficial. Not affiliated with oxc-project.
 
-It keeps `oxc-resolver`'s named API (`ResolverFactory`, `sync`, the option/result
-types and enums) and behaviour, and restores two Node.js / CommonJS
+It keeps `oxc-resolver`'s API and behaviour, and restores two Node.js / CommonJS
 resolution details that upstream trades for speed:
 
 - `LOAD_AS_FILE(DIR/X)` is tried before `LOAD_AS_DIRECTORY(DIR/X)` for a bare
@@ -51,7 +50,9 @@ bun add @uncompat/oxc-resolver
 ### API
 
 ```js
-import { ResolverFactory } from '@uncompat/oxc-resolver'
+import resolve, { ResolverFactory } from '@uncompat/oxc-resolver'
+
+resolve.sync(process.cwd(), 'some-package')
 
 const resolver = new ResolverFactory({ extensions: ['.js', '.ts'] })
 resolver.sync(process.cwd(), 'some-package')

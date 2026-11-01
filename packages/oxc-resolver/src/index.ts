@@ -107,3 +107,8 @@ export function sync(directory: string, request: string): ResolveResult {
   const importer = canonicalizeEntry(directory, {})
   return preferSiblingFile(oxcSync(importer, request), importer, request, {})
 }
+
+/** Default export mirroring the `oxc-resolver` / `unrs-resolver` call shape. */
+const resolve = { sync }
+
+export default resolve
