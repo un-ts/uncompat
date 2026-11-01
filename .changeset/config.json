@@ -3,12 +3,12 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "un-ts/mono-lib-boilerplate"
+      "repo": "un-ts/uncompat"
     }
   ],
   "commit": false,
   "linked": [],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": []

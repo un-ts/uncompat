@@ -1,6 +1,12 @@
 {
   "extends": "./tsconfig.base",
   "compilerOptions": {
-    "types": ["mdx", "node", "vite/client", "web"]
+    "types": [
+      "mdx",
+      "node",
+      "vite/client",
+      "web"
+    ],
+    "verbatimModuleSyntax": false
   }
 }
