@@ -15,6 +15,7 @@
 import { basename, dirname, join } from 'node:path'
 
 import { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-resolver'
+import * as oxcResolver from 'oxc-resolver'
 import type { NapiResolveOptions, ResolveResult } from 'oxc-resolver'
 
 import { canonicalizeEntry, preferSiblingFile } from './shims.js'
@@ -108,7 +109,14 @@ export function sync(directory: string, request: string): ResolveResult {
   return preferSiblingFile(oxcSync(importer, request), importer, request, {})
 }
 
-/** Default export mirroring the `oxc-resolver` / `unrs-resolver` call shape. */
-const resolve = { sync }
+/** Default export mirroring the documented `oxc-resolver` namespace shape. */
+const resolve = { ...oxcResolver, ResolverFactory, sync } as typeof oxcResolver & {
+  ResolverFactory: typeof ResolverFactory
+  sync: typeof sync
+}
+
+// `import * as` adds ESM interop keys the upstream CJS namespace does not have.
+delete (resolve as { default?: unknown }).default
+delete (resolve as Record<string, unknown>)['module.exports']
 
 export default resolve

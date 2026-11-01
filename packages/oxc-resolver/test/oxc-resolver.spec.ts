@@ -111,8 +111,15 @@ test.skipIf(process.platform === 'win32')(
   },
 )
 
-test('default export keeps the resolve.sync shape', () => {
+test('default export mirrors the oxc-resolver namespace', () => {
   expect(resolve.sync(fileOverDir, 'bar').path).toBe(inFileOverDir('node_modules', 'bar.js'))
+  expect(resolve.ResolverFactory).toBe(ResolverFactory)
+  const defaultRuntime = resolve as unknown as Record<string, unknown>
+  expect(defaultRuntime.EnforceExtension).toBeDefined()
+  expect(defaultRuntime.ModuleType).toBeDefined()
+  expect(new resolve.ResolverFactory().sync(fileOverDir, 'bar').path).toBe(
+    inFileOverDir('node_modules', 'bar.js'),
+  )
 })
 
 test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {
