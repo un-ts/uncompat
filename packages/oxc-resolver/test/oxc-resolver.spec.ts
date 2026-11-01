@@ -50,9 +50,7 @@ test('resolveFileSync applies the same file-over-directory ordering', () => {
 
 test('async and resolveFileAsync apply the same shims', async () => {
   const factory = new ResolverFactory()
-  expect((await factory.async(fileOverDir, 'bar')).path).toBe(
-    `${fileOverDir}/node_modules/bar.js`,
-  )
+  expect((await factory.async(fileOverDir, 'bar')).path).toBe(`${fileOverDir}/node_modules/bar.js`)
   expect((await factory.resolveFileAsync(`${fileOverDir}/app.js`, 'bar')).path).toBe(
     `${fileOverDir}/node_modules/bar.js`,
   )
@@ -81,9 +79,7 @@ test('default export keeps the resolve.sync shape', () => {
 
 test('canonicalizeEntry respects symlinks: false and survives missing dirs', () => {
   expect(canonicalizeEntry('/definitely/missing', {})).toBe('/definitely/missing')
-  expect(canonicalizeEntry('/definitely/missing', { symlinks: false })).toBe(
-    '/definitely/missing',
-  )
+  expect(canonicalizeEntry('/definitely/missing', { symlinks: false })).toBe('/definitely/missing')
   const factory = new ResolverFactory({ symlinks: false })
   expect(factory.sync(`${fixtures}/symlink/link`, './index.js').path).toContain('symlink')
 })
