@@ -1,0 +1,14 @@
+coverage
+dist
+lib
+LICENSE
+*.cts
+*.js
+*.json
+*.lock
+*.log
+*.ts
+*.tsbuildinfo
+*.tsx
+*.yaml
+*.yml
