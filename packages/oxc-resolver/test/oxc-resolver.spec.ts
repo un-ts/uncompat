@@ -156,9 +156,9 @@ test('preferSiblingFile tolerates an unreadable package.json and absolute module
 test.skipIf(process.platform === 'win32')(
   'resolveFile* uses the canonical importer tree',
   async () => {
-    const root = join(fixtures, 'symlink-split')
-    const file = join(root, 'link', 'app.js')
-    const expected = join(root, 'real', 'node_modules', 'bar.js')
+    const root = join(fixtures, 'symlink-file-pkg')
+    const file = join(root, 'project', 'node_modules', 'pkg', 'app.js')
+    const expected = join(root, 'store', 'node_modules', 'bar', 'index.js')
     const factory = new ResolverFactory()
     expect(factory.resolveFileSync(file, 'bar').path).toBe(expected)
     expect((await factory.resolveFileAsync(file, 'bar')).path).toBe(expected)
