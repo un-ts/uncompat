@@ -12,7 +12,7 @@
  * Anything else — including upstream bug fixes — is delegated to `oxc-resolver`.
  */
 
-import { dirname } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 
 import { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-resolver'
 import type { NapiResolveOptions, ResolveResult } from 'oxc-resolver'
@@ -73,8 +73,9 @@ export class ResolverFactory {
 
   resolveFileSync(file: string, request: string): ResolveResult {
     const importer = canonicalizeEntry(dirname(file), this.#options)
+    const canonicalFile = join(importer, basename(file))
     return preferSiblingFile(
-      this.#inner.resolveFileSync(file, request),
+      this.#inner.resolveFileSync(canonicalFile, request),
       importer,
       request,
       this.#options,
@@ -83,8 +84,9 @@ export class ResolverFactory {
 
   async resolveFileAsync(file: string, request: string): Promise<ResolveResult> {
     const importer = canonicalizeEntry(dirname(file), this.#options)
+    const canonicalFile = join(importer, basename(file))
     return preferSiblingFile(
-      await this.#inner.resolveFileAsync(file, request),
+      await this.#inner.resolveFileAsync(canonicalFile, request),
       importer,
       request,
       this.#options,

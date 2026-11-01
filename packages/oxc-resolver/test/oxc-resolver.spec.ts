@@ -150,6 +150,18 @@ test('preferSiblingFile tolerates an unreadable package.json and absolute module
 })
 
 test.skipIf(process.platform === 'win32')(
+  'resolveFile* uses the canonical importer tree',
+  async () => {
+    const root = join(fixtures, 'symlink-split')
+    const file = join(root, 'link', 'app.js')
+    const expected = join(root, 'real', 'node_modules', 'bar.js')
+    const factory = new ResolverFactory()
+    expect(factory.resolveFileSync(file, 'bar').path).toBe(expected)
+    expect((await factory.resolveFileAsync(file, 'bar')).path).toBe(expected)
+  },
+)
+
+test.skipIf(process.platform === 'win32')(
   'entry directory is canonicalized when symlinks are enabled',
   () => {
     const factory = new ResolverFactory()
