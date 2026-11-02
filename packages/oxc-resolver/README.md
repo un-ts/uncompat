@@ -66,7 +66,7 @@ resolver.sync(process.cwd(), 'some-package')
 yarn bench
 ```
 
-Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific; the shim costs an entry `realpath` plus a sibling `stat`, and `symlinks: false` skips the former.
+Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific: the shim costs an entry `realpath`, a sibling `stat`, and — when that sibling exists — a `package.json` read to honour `exports`. On the NAS where this was measured that is 30–50× slower than upstream; on a local SSD the gap is much smaller, and `symlinks: false` removes the `realpath` part.
 
 ## Limitations
 
