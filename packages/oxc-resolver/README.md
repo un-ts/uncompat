@@ -71,7 +71,7 @@ importer, request and upstream result). Call `clearCache()` after changing symli
 yarn bench
 ```
 
-Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific: the shim caches the canonicalized importer and the override decision per (importer, request, resolved path), so only the first resolve of a pair pays the `realpath`/`stat`/`package.json` cost. With warm caches it is roughly 1.1–1.4× slower than upstream, and a cold resolve for a new pair is ~2.4× slower; `symlinks: false` also skips the `realpath`.
+Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific: the shim caches the canonicalized importer and the override decision per (importer, request, resolved path), so only the first resolve of a pair pays the `realpath`/`stat`/`package.json` cost. With warm caches it is roughly 1.1–1.4× slower than upstream, and a cold resolve for a new pair is about 2× slower; `symlinks: false` also skips the `realpath`.
 
 ## Limitations
 

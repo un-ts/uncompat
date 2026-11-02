@@ -53,7 +53,7 @@ test('exportsFields is honored before the sibling file', () => {
   expect(new ResolverFactory({ exportsFields: [] }).sync(fileOverDir, request).path).toBe(sibling)
 })
 
-test('repeated resolutions reuse the shim cache and clearCache resets it', () => {
+test('repeated resolutions are stable across clearCache', () => {
   const factory = new ResolverFactory()
   const expected = inFileOverDir('node_modules', 'bar.js')
   expect(factory.sync(fileOverDir, 'bar').path).toBe(expected)
