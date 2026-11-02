@@ -1,6 +1,11 @@
 {
   "extends": "./tsconfig.base",
   "compilerOptions": {
-    "types": ["mdx", "node", "vite/client", "web"]
+    "types": ["mdx", "node", "vite/client", "web"],
+    // Needed because `@uncompat/oxc-resolver` re-exports the ambient const enums
+    // (`EnforceExtension`, `ModuleType`) from `oxc-resolver`.
+    "verbatimModuleSyntax": false,
+    // The source uses `.ts` specifiers so Node.js can run it with type stripping.
+    "allowImportingTsExtensions": true
   }
 }

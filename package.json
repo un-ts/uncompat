@@ -1,9 +1,9 @@
 {
-  "name": "mono-lib-boilerplate",
+  "name": "uncompat",
   "version": "0.0.0",
   "type": "module",
-  "description": "A simple mono library boilerplate",
-  "repository": "git+https://github.com/un-ts/mono-lib-boilerplate.git",
+  "description": "Unofficial Node-compatible module resolution layers",
+  "repository": "git+https://github.com/un-ts/uncompat.git",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "funding": "https://opencollective.com/unts",
   "license": "MIT",

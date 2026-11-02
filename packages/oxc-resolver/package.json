@@ -1,20 +1,36 @@
 {
-  "name": "lib-boilerplate",
+  "name": "@uncompat/oxc-resolver",
   "version": "0.0.0",
   "type": "module",
-  "description": "A simple library boilerplate",
-  "repository": "git+https://github.com/un-ts/mono-lib-boilerplate.git",
-  "homepage": "https://github.com/un-ts/mono-lib-boilerplate/blob/main/packages/lib-boilerplate",
+  "description": "Node-compatible module resolution on top of oxc-resolver",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/un-ts/uncompat.git",
+    "directory": "packages/oxc-resolver"
+  },
+  "homepage": "https://github.com/un-ts/uncompat/blob/main/packages/oxc-resolver",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "funding": "https://opencollective.com/unts",
   "license": "MIT",
   "engines": {
-    "node": "^12.20.0 || ^14.18.0 || >=16.0.0"
+    "node": ">=14.18.0"
   },
   "exports": "./src/index.ts",
   "files": [
     "lib"
   ],
+  "keywords": [
+    "oxc",
+    "oxc-resolver",
+    "resolver",
+    "module-resolution",
+    "node",
+    "commonjs",
+    "compatibility"
+  ],
+  "dependencies": {
+    "oxc-resolver": "^11.24.2"
+  },
   "publishConfig": {
     "access": "public",
     "main": "./lib/index.cjs",
