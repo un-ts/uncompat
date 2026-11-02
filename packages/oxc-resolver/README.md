@@ -23,6 +23,7 @@ Requires Node.js 14.18 or later (the effective floor of `oxc-resolver`'s loader 
 - [Usage](#usage)
   - [Install](#install)
   - [API](#api)
+- [Benchmarks](#benchmarks)
 - [Limitations](#limitations)
 - [Sponsors and Backers](#sponsors-and-backers)
   - [Sponsors](#sponsors)
@@ -58,6 +59,14 @@ resolve.sync(process.cwd(), 'some-package')
 const resolver = new ResolverFactory({ extensions: ['.js', '.ts'] })
 resolver.sync(process.cwd(), 'some-package')
 ```
+
+## Benchmarks
+
+```sh
+yarn bench
+```
+
+Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific; the shim costs an entry `realpath` plus a sibling `stat`, and `symlinks: false` skips the former.
 
 ## Limitations
 
