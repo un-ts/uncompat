@@ -9,7 +9,8 @@ resolution details that upstream trades for speed:
 
 - `LOAD_AS_FILE(DIR/X)` is tried before `LOAD_AS_DIRECTORY(DIR/X)` for a bare
   package name, so a sibling `node_modules/X.js` wins over `node_modules/X/`
-  (unless the package declares `exports`, which takes precedence over both).
+  (unless the package declares any configured `exportsFields` — `exports` by
+  default — which takes precedence over both).
 - the entry path is canonicalized before resolution, like Node does when
   symlinks are enabled.
 
