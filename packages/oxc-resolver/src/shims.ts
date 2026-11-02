@@ -89,7 +89,7 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
     return result
   }
 
-  const cacheKey = `${importerDirectory}\0${request}`
+  const cacheKey = `${importerDirectory}\0${request}\0${result.path}`
   const cached = cache.overrides.get(cacheKey)
   if (cached !== undefined) {
     return cached
@@ -178,7 +178,7 @@ function packageDeclaresExports(packageDirectory: string, exportsFields: string[
   }
   try {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as Record<string, unknown>
-    const declares = exportsFields.some(fieldPath => {
+    return exportsFields.some(fieldPath => {
       let value: unknown = packageJson
       for (const key of fieldPath) {
         if (typeof value !== 'object' || value === null) {
@@ -189,7 +189,6 @@ function packageDeclaresExports(packageDirectory: string, exportsFields: string[
       // `null` is not a condition map; Node falls back to file/directory lookup.
       return value !== undefined && value !== null
     })
-    return declares
   } catch {
     return false
   }

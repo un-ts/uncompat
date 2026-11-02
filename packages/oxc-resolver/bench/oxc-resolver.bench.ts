@@ -40,3 +40,24 @@ for (const [name, request, expected] of cases) {
     )
   })
 }
+
+test('cold (cache cleared per iteration)', async ({ bench }) => {
+  const uncompat = new UncompatResolverFactory()
+  const oxc = new OxcResolverFactory()
+  const unrs = new UnrsResolverFactory()
+  const request = 'bar'
+
+  expect(uncompat.sync(fixtures, request).path).toBe(join(fixtures, 'node_modules', 'bar.js'))
+
+  await bench.compare(
+    bench('@uncompat/oxc-resolver', { beforeEach: () => uncompat.clearCache() }, () => {
+      uncompat.sync(fixtures, request)
+    }),
+    bench('oxc-resolver', { beforeEach: () => oxc.clearCache() }, () => {
+      oxc.sync(fixtures, request)
+    }),
+    bench('unrs-resolver', { beforeEach: () => unrs.clearCache() }, () => {
+      unrs.sync(fixtures, request)
+    }),
+  )
+})

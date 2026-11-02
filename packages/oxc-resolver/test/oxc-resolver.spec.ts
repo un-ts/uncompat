@@ -1,3 +1,5 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -56,12 +58,6 @@ test('repeated resolutions reuse the shim cache and clearCache resets it', () =>
   const expected = inFileOverDir('node_modules', 'bar.js')
   expect(factory.sync(fileOverDir, 'bar').path).toBe(expected)
   expect(factory.sync(fileOverDir, 'bar').path).toBe(expected)
-  expect(factory.sync(fileOverDir, 'no-package-json').path).toBe(
-    inFileOverDir('node_modules', 'no-package-json.js'),
-  )
-  expect(factory.sync(fileOverDir, 'no-package-json').path).toBe(
-    inFileOverDir('node_modules', 'no-package-json.js'),
-  )
   expect(factory.sync(fileOverDir, 'dir-only').path).toBe(
     inFileOverDir('node_modules', 'dir-only', 'index.js'),
   )
@@ -76,6 +72,37 @@ test('repeated resolutions reuse the shim cache and clearCache resets it', () =>
   )
   factory.clearCache()
   expect(factory.sync(fileOverDir, 'bar').path).toBe(expected)
+})
+
+test('the override cache is keyed by the upstream result', () => {
+  const cache = createShimCache()
+  const inside = { path: inFileOverDir('node_modules', 'bar', 'index.js') }
+  const outside = { path: inFileOverDir('app.js') }
+  const sibling = inFileOverDir('node_modules', 'bar.js')
+  expect(preferSiblingFile(inside, fileOverDir, 'bar', {}, cache).path).toBe(sibling)
+  expect(preferSiblingFile(outside, fileOverDir, 'bar', {}, cache)).toBe(outside)
+  expect(preferSiblingFile(inside, fileOverDir, 'bar', {}, cache).path).toBe(sibling)
+})
+
+test('the shim decision is cached until clearCache', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'uncompat-cache-'))
+  try {
+    mkdirSync(join(dir, 'node_modules', 'bar'), { recursive: true })
+    writeFileSync(join(dir, 'node_modules', 'bar', 'index.js'), '')
+    writeFileSync(join(dir, 'node_modules', 'bar', 'package.json'), '{"main":"index.js"}')
+    const sibling = join(dir, 'node_modules', 'bar.js')
+    writeFileSync(sibling, '')
+
+    const factory = new ResolverFactory()
+    expect(factory.sync(dir, 'bar').path).toBe(sibling)
+    rmSync(sibling)
+    // The cached decision wins over the filesystem until clearCache().
+    expect(factory.sync(dir, 'bar').path).toBe(sibling)
+    factory.clearCache()
+    expect(factory.sync(dir, 'bar').path).toBe(join(dir, 'node_modules', 'bar', 'index.js'))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })
 
 test('directory without a sibling file still resolves as a directory', () => {

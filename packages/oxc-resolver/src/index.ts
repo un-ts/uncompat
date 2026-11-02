@@ -115,6 +115,7 @@ export class ResolverFactory {
 
 /** Resolve `request` from `directory`, with the compatibility shims applied. */
 export function sync(directory: string, request: string): ResolveResult {
+  // Intentionally uncached: a one-shot call has no previous resolution to reuse.
   const cache = createShimCache()
   const importer = canonicalizePath(directory, {}, cache)
   return preferSiblingFile(oxcSync(importer, request), importer, request, {}, cache)

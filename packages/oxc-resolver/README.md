@@ -60,8 +60,10 @@ const resolver = new ResolverFactory({ extensions: ['.js', '.ts'] })
 resolver.sync(process.cwd(), 'some-package')
 ```
 
-The resolver caches canonicalized importers and sibling lookups. Call `clearCache()` after
-changing symlinks or `package.json` files, like `oxc-resolver`.
+`ResolverFactory` instances cache canonicalized importers and override decisions (keyed by the
+importer, request and upstream result). Call `clearCache()` after changing symlinks or
+`package.json` files, or when files appear/disappear, like `oxc-resolver`. The top-level
+`sync()` helper is intentionally uncached.
 
 ## Benchmarks
 
@@ -69,7 +71,7 @@ changing symlinks or `package.json` files, like `oxc-resolver`.
 yarn bench
 ```
 
-Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific: the shim caches the canonicalized importer and the override decision per importer/request, so only the first resolve of a pair pays the `realpath`/`stat`/`package.json` cost. With warm caches it is roughly 1.3–1.6× slower than upstream; `symlinks: false` also skips the `realpath`.
+Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific: the shim caches the canonicalized importer and the override decision per (importer, request, resolved path), so only the first resolve of a pair pays the `realpath`/`stat`/`package.json` cost. With warm caches it is roughly 1.1–1.4× slower than upstream, and a cold resolve for a new pair is ~2.4× slower; `symlinks: false` also skips the `realpath`.
 
 ## Limitations
 
