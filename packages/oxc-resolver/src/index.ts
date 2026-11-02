@@ -17,7 +17,8 @@ import { dirname } from 'node:path'
 import oxcResolver, { ResolverFactory as OxcResolverFactory, sync as oxcSync } from 'oxc-resolver'
 import type { NapiResolveOptions, ResolveResult } from 'oxc-resolver'
 
-import { canonicalizePath, preferSiblingFile } from './shims.ts'
+import { canonicalizePath, createShimCache, preferSiblingFile } from './shims.ts'
+import type { ShimCache } from './shims.ts'
 
 export type * from 'oxc-resolver'
 export { EnforceExtension, ModuleType } from 'oxc-resolver'
@@ -29,6 +30,7 @@ export { EnforceExtension, ModuleType } from 'oxc-resolver'
 export class ResolverFactory {
   readonly #inner: OxcResolverFactory
   readonly #options: NapiResolveOptions
+  readonly #cache: ShimCache = createShimCache()
 
   /**
    * @param options - Upstream resolve options
@@ -52,42 +54,53 @@ export class ResolverFactory {
 
   clearCache(): void {
     this.#inner.clearCache()
+    this.#cache.realpaths.clear()
+    this.#cache.overrides.clear()
   }
 
   sync(directory: string, request: string): ResolveResult {
-    const importer = canonicalizePath(directory, this.#options)
-    return preferSiblingFile(this.#inner.sync(importer, request), importer, request, this.#options)
+    const importer = canonicalizePath(directory, this.#options, this.#cache)
+    return preferSiblingFile(
+      this.#inner.sync(importer, request),
+      importer,
+      request,
+      this.#options,
+      this.#cache,
+    )
   }
 
   async async(directory: string, request: string): Promise<ResolveResult> {
-    const importer = canonicalizePath(directory, this.#options)
+    const importer = canonicalizePath(directory, this.#options, this.#cache)
     return preferSiblingFile(
       await this.#inner.async(importer, request),
       importer,
       request,
       this.#options,
+      this.#cache,
     )
   }
 
   resolveFileSync(file: string, request: string): ResolveResult {
-    const canonicalFile = canonicalizePath(file, this.#options)
+    const canonicalFile = canonicalizePath(file, this.#options, this.#cache)
     const importer = dirname(canonicalFile)
     return preferSiblingFile(
       this.#inner.resolveFileSync(canonicalFile, request),
       importer,
       request,
       this.#options,
+      this.#cache,
     )
   }
 
   async resolveFileAsync(file: string, request: string): Promise<ResolveResult> {
-    const canonicalFile = canonicalizePath(file, this.#options)
+    const canonicalFile = canonicalizePath(file, this.#options, this.#cache)
     const importer = dirname(canonicalFile)
     return preferSiblingFile(
       await this.#inner.resolveFileAsync(canonicalFile, request),
       importer,
       request,
       this.#options,
+      this.#cache,
     )
   }
 
@@ -102,8 +115,10 @@ export class ResolverFactory {
 
 /** Resolve `request` from `directory`, with the compatibility shims applied. */
 export function sync(directory: string, request: string): ResolveResult {
-  const importer = canonicalizePath(directory, {})
-  return preferSiblingFile(oxcSync(importer, request), importer, request, {})
+  // Intentionally uncached: a one-shot call has no previous resolution to reuse.
+  const cache = createShimCache()
+  const importer = canonicalizePath(directory, {}, cache)
+  return preferSiblingFile(oxcSync(importer, request), importer, request, {}, cache)
 }
 
 /** Default export with the shimmed `sync` and `ResolverFactory` overriding upstream. */

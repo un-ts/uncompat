@@ -23,6 +23,7 @@ Requires Node.js 14.18 or later (the effective floor of `oxc-resolver`'s loader 
 - [Usage](#usage)
   - [Install](#install)
   - [API](#api)
+- [Benchmarks](#benchmarks)
 - [Limitations](#limitations)
 - [Sponsors and Backers](#sponsors-and-backers)
   - [Sponsors](#sponsors)
@@ -58,6 +59,19 @@ resolve.sync(process.cwd(), 'some-package')
 const resolver = new ResolverFactory({ extensions: ['.js', '.ts'] })
 resolver.sync(process.cwd(), 'some-package')
 ```
+
+`ResolverFactory` instances cache canonicalized importers and override decisions (keyed by the
+importer, request and upstream result). Call `clearCache()` after changing symlinks or
+`package.json` files, or when files appear/disappear, like `oxc-resolver`. The top-level
+`sync()` helper is intentionally uncached.
+
+## Benchmarks
+
+```sh
+yarn bench
+```
+
+Runs the vitest benchmark in `bench/` against `oxc-resolver` and `unrs-resolver` on the same fixtures. Numbers are machine-specific: the shim caches the canonicalized importer and the override decision per (importer, request, resolved path), so only the first resolve of a pair pays the `realpath`/`stat`/`package.json` cost. With warm caches it is roughly 1.1–1.4× slower than upstream, and a cold resolve for a new pair is about 2× slower; `symlinks: false` also skips the `realpath`.
 
 ## Limitations
 

@@ -1,10 +1,17 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import resolve, { ResolverFactory, sync } from '@uncompat/oxc-resolver'
 import { expect, test } from 'vitest'
 
-import { canonicalizePath, isPackageRoot, preferSiblingFile } from '../src/shims.ts'
+import {
+  canonicalizePath,
+  createShimCache,
+  isPackageRoot,
+  preferSiblingFile,
+} from '../src/shims.ts'
 
 const fixtures = fileURLToPath(new URL('./fixtures', import.meta.url))
 const fileOverDir = join(fixtures, 'file-over-dir')
@@ -44,6 +51,58 @@ test('exportsFields is honored before the sibling file', () => {
     new ResolverFactory({ exportsFields: [['name', 'nested']] }).sync(fileOverDir, request).path,
   ).toBe(sibling)
   expect(new ResolverFactory({ exportsFields: [] }).sync(fileOverDir, request).path).toBe(sibling)
+})
+
+test('repeated resolutions are stable across clearCache', () => {
+  const factory = new ResolverFactory()
+  const expected = inFileOverDir('node_modules', 'bar.js')
+  expect(factory.sync(fileOverDir, 'bar').path).toBe(expected)
+  expect(factory.sync(fileOverDir, 'bar').path).toBe(expected)
+  expect(factory.sync(fileOverDir, 'dir-only').path).toBe(
+    inFileOverDir('node_modules', 'dir-only', 'index.js'),
+  )
+  expect(factory.sync(fileOverDir, 'dir-only').path).toBe(
+    inFileOverDir('node_modules', 'dir-only', 'index.js'),
+  )
+  expect(factory.sync(fileOverDir, 'with-exports').path).toBe(
+    inFileOverDir('node_modules', 'with-exports', 'index.js'),
+  )
+  expect(factory.sync(fileOverDir, 'with-exports').path).toBe(
+    inFileOverDir('node_modules', 'with-exports', 'index.js'),
+  )
+  factory.clearCache()
+  expect(factory.sync(fileOverDir, 'bar').path).toBe(expected)
+})
+
+test('the override cache is keyed by the upstream result', () => {
+  const cache = createShimCache()
+  const inside = { path: inFileOverDir('node_modules', 'bar', 'index.js') }
+  const outside = { path: inFileOverDir('app.js') }
+  const sibling = inFileOverDir('node_modules', 'bar.js')
+  expect(preferSiblingFile(inside, fileOverDir, 'bar', {}, cache).path).toBe(sibling)
+  expect(preferSiblingFile(outside, fileOverDir, 'bar', {}, cache)).toBe(outside)
+  expect(preferSiblingFile(inside, fileOverDir, 'bar', {}, cache).path).toBe(sibling)
+})
+
+test('the shim decision is cached until clearCache', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'uncompat-cache-')))
+  try {
+    mkdirSync(join(dir, 'node_modules', 'bar'), { recursive: true })
+    writeFileSync(join(dir, 'node_modules', 'bar', 'index.js'), '')
+    writeFileSync(join(dir, 'node_modules', 'bar', 'package.json'), '{"main":"index.js"}')
+    const sibling = join(dir, 'node_modules', 'bar.js')
+    writeFileSync(sibling, '')
+
+    const factory = new ResolverFactory()
+    expect(factory.sync(dir, 'bar').path).toBe(sibling)
+    rmSync(sibling)
+    // The cached decision wins over the filesystem until clearCache().
+    expect(factory.sync(dir, 'bar').path).toBe(sibling)
+    factory.clearCache()
+    expect(factory.sync(dir, 'bar').path).toBe(join(dir, 'node_modules', 'bar', 'index.js'))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })
 
 test('directory without a sibling file still resolves as a directory', () => {
@@ -146,7 +205,9 @@ test.skipIf(process.platform === 'win32')(
   'preferSiblingFile survives a looping symlink package directory',
   () => {
     const result = { path: '/definitely/not/here/x.js' }
-    expect(preferSiblingFile(result, join(fixtures, 'loop'), 'link', {})).toBe(result)
+    expect(preferSiblingFile(result, join(fixtures, 'loop'), 'link', {}, createShimCache())).toBe(
+      result,
+    )
   },
 )
 
@@ -157,10 +218,14 @@ test('default export exposes the shimmed sync and ResolverFactory', () => {
 })
 
 test('canonicalizePath respects symlinks: false and survives missing paths', () => {
-  expect(canonicalizePath('/definitely/missing', {})).toBe('/definitely/missing')
-  expect(canonicalizePath('/definitely/missing', { symlinks: false })).toBe('/definitely/missing')
-  expect(canonicalizePath('/definitely/missing.js', {})).toBe('/definitely/missing.js')
-  expect(canonicalizePath('/definitely/missing.js', { symlinks: false })).toBe(
+  expect(canonicalizePath('/definitely/missing', {}, createShimCache())).toBe('/definitely/missing')
+  expect(canonicalizePath('/definitely/missing', { symlinks: false }, createShimCache())).toBe(
+    '/definitely/missing',
+  )
+  expect(canonicalizePath('/definitely/missing.js', {}, createShimCache())).toBe(
+    '/definitely/missing.js',
+  )
+  expect(canonicalizePath('/definitely/missing.js', { symlinks: false }, createShimCache())).toBe(
     '/definitely/missing.js',
   )
   const factory = new ResolverFactory({ symlinks: false })
@@ -184,18 +249,26 @@ test('isPackageRoot only accepts package roots', () => {
 
 test('preferSiblingFile leaves unrelated results alone', () => {
   const result = { path: inFileOverDir('app.js') }
-  expect(preferSiblingFile(result, fileOverDir, 'bar', {})).toBe(result)
-  const missing = preferSiblingFile({} as { path?: string }, fileOverDir, 'bar', {})
+  expect(preferSiblingFile(result, fileOverDir, 'bar', {}, createShimCache())).toBe(result)
+  const missing = preferSiblingFile(
+    {} as { path?: string },
+    fileOverDir,
+    'bar',
+    {},
+    createShimCache(),
+  )
   expect(missing.path).toBeUndefined()
 })
 
 test('preferSiblingFile tolerates an unreadable package.json and absolute modules', () => {
   const result = { path: inFileOverDir('node_modules', 'broken-json', 'index.js') }
-  expect(preferSiblingFile(result, fileOverDir, 'broken-json', {}).path).toBe(
+  expect(preferSiblingFile(result, fileOverDir, 'broken-json', {}, createShimCache()).path).toBe(
     inFileOverDir('node_modules', 'broken-json.js'),
   )
-  expect(preferSiblingFile(result, fileOverDir, 'broken-json', { modules: ['/abs'] })).toBe(result)
-  expect(preferSiblingFile(result, fileOverDir, './local', {})).toBe(result)
+  expect(
+    preferSiblingFile(result, fileOverDir, 'broken-json', { modules: ['/abs'] }, createShimCache()),
+  ).toBe(result)
+  expect(preferSiblingFile(result, fileOverDir, './local', {}, createShimCache())).toBe(result)
 })
 
 test.skipIf(process.platform === 'win32')(
