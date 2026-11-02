@@ -8,6 +8,17 @@
 import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
 
+/** Per-resolver caches for the two filesystem hot spots. */
+export interface ShimCache {
+  realpaths: Map<string, string>
+  overrides: Map<string, string | null>
+}
+
+/** Create an empty shim cache; `clearCache()` empties both maps. */
+export function createShimCache(): ShimCache {
+  return { realpaths: new Map(), overrides: new Map() }
+}
+
 /** Minimal shape of the options we need for the shims. */
 export interface ShimOptions {
   extensions?: string[]
@@ -24,12 +35,18 @@ const DEFAULT_EXTENSIONS = ['.js', '.json', '.node']
  * layer) resolves the real path of the entry (directory or importer file) when symlinks are
  * enabled.
  */
-export function canonicalizePath(path: string, options: ShimOptions): string {
+export function canonicalizePath(path: string, options: ShimOptions, cache: ShimCache): string {
   if (options.symlinks === false) {
     return path
   }
+  const cached = cache.realpaths.get(path)
+  if (cached) {
+    return cached
+  }
   try {
-    return realpathSync(path)
+    const realpath = realpathSync(path)
+    cache.realpaths.set(path, realpath)
+    return realpath
   } catch {
     return path
   }
@@ -66,9 +83,18 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
   importerDirectory: string,
   request: string,
   options: ShimOptions,
+  cache: ShimCache,
 ): T {
   if (!result.path || !isPackageRoot(request)) {
     return result
+  }
+
+  const cacheKey = `${importerDirectory}\0${request}`
+  const cached = cache.overrides.get(cacheKey)
+  if (cached !== undefined) {
+    return cached
+      ? { ...result, path: cached, packageJsonPath: undefined, moduleType: undefined }
+      : result
   }
 
   const modules = options.modules
@@ -98,17 +124,21 @@ export function preferSiblingFile<T extends { path?: string; packageJsonPath?: s
         }
         // `exports` beats `LOAD_AS_FILE`; read it once, after a candidate actually exists.
         if (packageDeclaresExports(packageDirectory, exportsFields)) {
+          cache.overrides.set(cacheKey, null)
           return result
         }
+        cache.overrides.set(cacheKey, candidate)
         return { ...result, path: candidate, packageJsonPath: undefined, moduleType: undefined }
       }
       // A bare exact file (`node_modules/X`) cannot coexist with a directory of
       // the same name, so there is nothing else to try.
+      cache.overrides.set(cacheKey, null)
       return result
     }
 
     const parent = dirname(current)
     if (parent === current) {
+      cache.overrides.set(cacheKey, null)
       return result
     }
     current = parent
@@ -148,7 +178,7 @@ function packageDeclaresExports(packageDirectory: string, exportsFields: string[
   }
   try {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as Record<string, unknown>
-    return exportsFields.some(fieldPath => {
+    const declares = exportsFields.some(fieldPath => {
       let value: unknown = packageJson
       for (const key of fieldPath) {
         if (typeof value !== 'object' || value === null) {
@@ -159,6 +189,7 @@ function packageDeclaresExports(packageDirectory: string, exportsFields: string[
       // `null` is not a condition map; Node falls back to file/directory lookup.
       return value !== undefined && value !== null
     })
+    return declares
   } catch {
     return false
   }
