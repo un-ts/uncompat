@@ -54,7 +54,8 @@ export function isPackageRoot(request: string): boolean {
 /**
  * Oxc-resolver > #839 tries `node_modules/X/` before `node_modules/X.js` for a bare package name.
  * The CommonJS spec tries `LOAD_AS_FILE(DIR/X)` first, so a sibling `X.js` must win over
- * `X/index.js` — unless the package declares `exports`, which takes precedence over both.
+ * `X/index.js` — unless the package declares one of the configured `exportsFields` (default
+ * `exports`), which takes precedence over both.
  *
  * `moduleType`/`packageJsonPath` describe the discarded directory resolution, so they are cleared
  * when the sibling file wins; computing them for the file is left to `oxc-resolver`, which this

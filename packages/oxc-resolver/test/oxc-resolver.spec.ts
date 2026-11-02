@@ -43,6 +43,7 @@ test('exportsFields is honored before the sibling file', () => {
   expect(
     new ResolverFactory({ exportsFields: [['name', 'nested']] }).sync(fileOverDir, request).path,
   ).toBe(sibling)
+  expect(new ResolverFactory({ exportsFields: [] }).sync(fileOverDir, request).path).toBe(sibling)
 })
 
 test('directory without a sibling file still resolves as a directory', () => {

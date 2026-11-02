@@ -19,6 +19,15 @@
   "files": [
     "lib"
   ],
+  "keywords": [
+    "oxc",
+    "oxc-resolver",
+    "resolver",
+    "module-resolution",
+    "node",
+    "commonjs",
+    "compatibility"
+  ],
   "dependencies": {
     "oxc-resolver": "^11.24.2"
   },
