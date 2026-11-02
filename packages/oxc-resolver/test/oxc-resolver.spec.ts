@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -85,7 +85,7 @@ test('the override cache is keyed by the upstream result', () => {
 })
 
 test('the shim decision is cached until clearCache', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'uncompat-cache-'))
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'uncompat-cache-')))
   try {
     mkdirSync(join(dir, 'node_modules', 'bar'), { recursive: true })
     writeFileSync(join(dir, 'node_modules', 'bar', 'index.js'), '')
